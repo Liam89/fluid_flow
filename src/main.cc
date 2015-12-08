@@ -26,10 +26,7 @@ std::string create_grid()
 
 	std::stringstream ss;
 	dealii::GridOut grid_out;
-	grid_out.write_vtu(triangulation, ss);
-    std::ofstream out ("grid.xml");
-    grid_out.write_eps(triangulation, out);
-	std::cout << "Grid written to stringstream";
+    grid_out.write_vtu(triangulation, ss);
 	return ss.str();
 }
 
