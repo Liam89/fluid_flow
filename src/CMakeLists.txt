@@ -13,9 +13,12 @@ SET(VTK_DIR "/home/liam/dev/VTK/VTK-6.3.0-build")
 find_package(VTK REQUIRED)
 include(${VTK_USE_FILE})
 
+
 SET(QT_QMAKE_EXECUTABLE "/home/liam/dev/qt/qt5.5.1/5.5/gcc_64/bin/qmake")
 set(CMAKE_AUTOMOC ON)
 find_package(Qt5Widgets REQUIRED QUIET)
+# disable QTs 'emit' 'signals' and 'slots' macros because they clash with deal.ii and boost
+ADD_DEFINITIONS(-DQT_NO_KEYWORDS)
 
 # qt generates source files, so include the following dirs to enable out-of-source builds
 INCLUDE_DIRECTORIES(
@@ -23,8 +26,14 @@ INCLUDE_DIRECTORIES(
   ${CMAKE_CURRENT_SOURCE_DIR}
 )
 
+file(GLOB UI_FILES *.ui)
+file(GLOB QT_WRAP *.h)
+file(GLOB CPP_FILES *.cpp)
 
 SET(TARGET "simulation")
-ADD_EXECUTABLE(${TARGET} main.cc)
+
+qt5_wrap_ui(UISrcs ${UI_FILES} )
+ADD_EXECUTABLE(${TARGET} ${CPP_FILES} ${UISrcs} ${QT_WRAP})
 DEAL_II_SETUP_TARGET(${TARGET})
+qt5_use_modules(${TARGET} Core Gui)
 target_link_libraries(${TARGET} ${VTK_LIBRARIES})

@@ -45,3 +45,6 @@ Note: may need to upgrade cmake depending on the version of eclipse/cmake used
 
 Import project via:
   File->Import->General->Existing projects into workspace
+
+
+For an overview of the vtk architecture see http://www.aosabook.org/en/vtk.html
