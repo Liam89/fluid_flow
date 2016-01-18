@@ -1,10 +1,3 @@
-#include <deal.II/grid/tria.h>
-#include <deal.II/grid/tria_accessor.h>
-#include <deal.II/grid/tria_iterator.h>
-#include <deal.II/grid/grid_generator.h>
-#include <deal.II/grid/manifold_lib.h>
-#include <deal.II/grid/grid_out.h>
-
 #include <vtkXMLUnstructuredGridReader.h>
 #include <vtkSmartPointer.h>
 #include <vtkDataSetMapper.h>
@@ -14,67 +7,80 @@
 #include <vtkRenderer.h>
 #include <vtkRenderWindowInteractor.h>
 
+#include <vtkGeometryFilter.h>
+#include <vtkLookupTable.h>
+#include <vtkPointData.h>
+#include <vtkDataSetSurfaceFilter.h>
+
+#include <QApplication>
+
+#include "simulation/laplace.h"
+
+#include "gui/mainwindow.h"
+
+#include <string>
 #include <iostream>
-#include <fstream>
-#include <sstream>
 
-std::string create_grid()
-{
-    dealii::Triangulation<2> triangulation;
-	dealii::GridGenerator::hyper_cube(triangulation);
-	triangulation.refine_global(4);
-
-	std::stringstream ss;
-	dealii::GridOut grid_out;
-    grid_out.write_vtu(triangulation, ss);
-	return ss.str();
-}
-
-void render(std::string vtu)
+vtkSmartPointer<vtkRenderer> render(std::string vtu)
 {
 	  //read all the data from the file
 	  vtkSmartPointer<vtkXMLUnstructuredGridReader> reader =
 	    vtkSmartPointer<vtkXMLUnstructuredGridReader>::New();
 	  reader->ReadFromInputStringOn();
 	  reader->SetInputString(vtu);
-	  reader->Update();
+      reader->Update();
 
-      vtkSmartPointer<vtkExtractEdges> extractEdges =
-          vtkSmartPointer<vtkExtractEdges>::New();
-      extractEdges->SetInputConnection(reader->GetOutputPort());
-      extractEdges->Update();
+      // Convert to polydata
+      vtkSmartPointer<vtkDataSetSurfaceFilter> surfaceFilter =
+        vtkSmartPointer<vtkDataSetSurfaceFilter>::New();
+      surfaceFilter->SetInputConnection(reader->GetOutputPort());
+      surfaceFilter->Update();
+      vtkSmartPointer<vtkPolyData> polydata = surfaceFilter->GetOutput();
+
+      polydata->GetPointData()->SetActiveScalars("solution");
+
+      // Find min and max z
+      double bounds[2];
+      polydata->GetScalarRange(bounds);
+      double minz = bounds[0];
+      double maxz = bounds[1];
+
+      // grid
+//      vtkSmartPointer<vtkExtractEdges> extractEdges =
+//          vtkSmartPointer<vtkExtractEdges>::New();
+//      extractEdges->SetInputConnection(reader->GetOutputPort());
+//      extractEdges->Update();
 
 	  //Create a mapper and actor
 	  vtkSmartPointer<vtkDataSetMapper> mapper =
-	    vtkSmartPointer<vtkDataSetMapper>::New();
-      mapper->SetInputConnection(extractEdges->GetOutputPort());
+        vtkSmartPointer<vtkDataSetMapper>::New();
+      mapper->SetInputConnection(surfaceFilter->GetOutputPort());
+      mapper->SetScalarRange(minz, maxz);
 
 	  vtkSmartPointer<vtkActor> actor =
 	    vtkSmartPointer<vtkActor>::New();
-	  actor->SetMapper(mapper);
+      actor->SetMapper(mapper);
 
-	  //Create a renderer, render window, and interactor
+      //Create a renderer, and add the actor to the scene
 	  vtkSmartPointer<vtkRenderer> renderer =
-	    vtkSmartPointer<vtkRenderer>::New();
-	  vtkSmartPointer<vtkRenderWindow> renderWindow =
-	    vtkSmartPointer<vtkRenderWindow>::New();
-      renderWindow->AddRenderer(renderer);
-	  vtkSmartPointer<vtkRenderWindowInteractor> renderWindowInteractor =
-	    vtkSmartPointer<vtkRenderWindowInteractor>::New();
-	  renderWindowInteractor->SetRenderWindow(renderWindow);
+        vtkSmartPointer<vtkRenderer>::New();
+      renderer->AddActor(actor);
 
-	  //Add the actor to the scene
-	  renderer->AddActor(actor);
-	  renderer->SetBackground(.3, .6, .3); // Background color green
-
-	  //Render and interact
-	  renderWindow->Render();
-	  renderWindowInteractor->Start();
+      return renderer;
 }
 
-int main()
+int main(int argc, char** argv)
 {
-    std::string ss = create_grid();
-	render(ss);
+    QApplication app(argc, argv);
+
+    Simulation::Simulation laplace_problem;
+    std::string ss = laplace_problem.run();
+    vtkSmartPointer<vtkRenderer> renderer = render(ss);
+
+    MainWindow mainWindow;
+    mainWindow.set_renderer(renderer);
+    mainWindow.show();
+
+    return app.exec();
 }
 
