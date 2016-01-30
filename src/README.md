@@ -36,15 +36,20 @@ Install deal.ii:
   make install
   make test
 
-Creating eclipse project:
-  mkdir /home/liam/eclipse/workspace/fluid_flow/build
-  cd /home/liam/eclipse/workspace/fluid_flow/build
-  mkdir /home/liam/eclipse/workspace/fluid_flow/src
-  cmake -G"Eclipse CDT4 - Unix Makefiles" -DCMAKE_BUILD_TYPE=Debug -DCMAKE_ECLIPSE_VERSION=4.5 ../src
-Note: may need to upgrade cmake depending on the version of eclipse/cmake used 
+Install gmock & gtest:
+  mkdir gmock && cd gmock
+  wget https://github.com/google/googlemock/archive/release-1.7.0.tar.gz
+  tar xzf release-1.7.0.tar.gz
+  mv googlemock-release-1.7.0 gmock-1.7.0
+  rm release-1.7.0.tar.gz
+  wget https://github.com/google/googletest/archive/release-1.7.0.tar.gz
+  tar xzf release-1.7.0.tar.gz
+  mv googletest-release-1.7.0/ gmock-1.7.0/gtest
+  rm release-1.7.0.tar.gz
 
-Import project via:
-  File->Import->General->Existing projects into workspace
 
 
-For an overview of the vtk architecture see http://www.aosabook.org/en/vtk.html
+
+Useful links:
+Cmake tutorial https://www.johnlamp.net/cmake-tutorial-1-getting-started.html
+Overview of the vtk architecture http://www.aosabook.org/en/vtk.html
