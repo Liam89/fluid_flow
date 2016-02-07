@@ -1,6 +1,6 @@
 #include <QApplication>
 
-#include "simulation/laplace.h"
+#include "simulation/poisson.h"
 #include "render/renderer.h"
 #include "gui/mainwindow.h"
 
@@ -11,8 +11,8 @@ int main(int argc, char** argv)
 {
     QApplication app{argc, argv};
 
-    Simulation::Simulation laplace_problem;
-    std::string ss = laplace_problem.run();
+    Simulation::Poisson poisson_problem;
+    std::string ss = poisson_problem.run();
     Renderer renderer{ss};
 
     MainWindow mainWindow;

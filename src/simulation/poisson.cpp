@@ -1,5 +1,5 @@
 // Adapted from deall II tutorials: https://dealii.org/8.2.1/doxygen/deal.II/Tutorial.html
-#include "laplace.h"
+#include "poisson.h"
 #include "deal.II/base/function_lib.h"
 #include <iostream>
 #include <fstream>
@@ -7,20 +7,20 @@
 
 namespace Simulation
 {
-    Simulation::Simulation()
+    Poisson::Poisson()
         : fe(1), // 2d bi-linear lagrange finite element (a square with degrees of freedom at the corners)
           dof_handler(triangulation) // associate degrees of freedom handler with triangulation (the mesh),
                                      //  triangulation doesn't need to be set up yet
     {}
 
     // square mesh with 16 * 16 cells
-    void Simulation::setup_grid()
+    void Poisson::setup_grid()
     {
         dealii::GridGenerator::hyper_cube(triangulation, -1, 1);
         triangulation.refine_global(4); // 2^4 * 2^4 cells
     }
 
-    const std::string Simulation::get_grid() const
+    const std::string Poisson::get_grid() const
     {
         std::stringstream ss;
         dealii::GridOut grid_out;
@@ -28,7 +28,7 @@ namespace Simulation
         return ss.str();
     }
 
-    std::string Simulation::get_solution()
+    std::string Poisson::get_solution()
     {
         std::stringstream ss;
         dealii::DataOut<2> data_out;
@@ -40,7 +40,7 @@ namespace Simulation
     }
 
     // Set up the dofs of the system and allocate memory for it
-    void Simulation::setup_system()
+    void Poisson::setup_system()
     {
         // enumerate dofs using the mesh and finite element, the 2d bi-linear lagrange element means there
         //  will be 1 dof on each cell vertex of the mesh - i.e. 17*17 dof for a 16*16 grid.
@@ -74,7 +74,7 @@ namespace Simulation
     }
 
     // Calculate the values of the system matrix and rhs
-    void Simulation::assemble_system()
+    void Poisson::assemble_system()
     {
         // quadrature to use when integrating over finite elements
         dealii::QGauss<2> quadrature_formula(2); // Gauss-Legendre quadrature, in 2d, with 2 points
@@ -148,14 +148,14 @@ namespace Simulation
 
 
 
-    void Simulation::solve()
+    void Poisson::solve()
     {
         dealii::SolverControl solver_control(1000, 1e-12);
         dealii::SolverCG<> solver(solver_control);
         solver.solve(system_matrix, solution, system_rhs, dealii::PreconditionIdentity());
     }
 
-    const std::string Simulation::run()
+    const std::string Poisson::run()
     {
         setup_grid();
         setup_system();

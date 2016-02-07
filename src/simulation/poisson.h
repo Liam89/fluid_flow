@@ -32,10 +32,10 @@
 
 namespace Simulation
 {
-    class Simulation
+    class Poisson
     {
     public:
-        Simulation();
+        Poisson();
         const std::string run();
         const std::string get_grid() const;
 
