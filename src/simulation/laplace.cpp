@@ -1,5 +1,6 @@
 // Adapted from deall II tutorials: https://dealii.org/8.2.1/doxygen/deal.II/Tutorial.html
 #include "laplace.h"
+#include "deal.II/base/function_lib.h"
 #include <iostream>
 #include <fstream>
 #include <sstream>
@@ -56,6 +57,22 @@ namespace Simulation
         system_rhs.reinit (dof_handler.n_dofs());
     }
 
+    template <int dim>
+    class BoundaryValues : public dealii::Function<dim>
+    {
+    public:
+      BoundaryValues () : dealii::Function<dim>() {}
+      virtual double value (const dealii::Point<dim>   &p,
+                            const unsigned int  component = 0) const;
+    };
+
+    template <int dim>
+    double BoundaryValues<dim>::value (const dealii::Point<dim> &p,
+                                       const unsigned int /*component*/) const
+    {
+      return p(0)*p(0);
+    }
+
     // Calculate the values of the system matrix and rhs
     void Simulation::assemble_system()
     {
@@ -93,7 +110,7 @@ namespace Simulation
 
                 for (unsigned int i = 0; i < dofs_per_cell; ++i) {
                   cell_rhs(i) += (fe_values.shape_value(i, q_index) *
-                                  1 *
+                                  0 *
                                   fe_values.JxW(q_index));
                 }
             }
@@ -117,14 +134,19 @@ namespace Simulation
         std::map<dealii::types::global_dof_index,double> boundary_values;
         dealii::VectorTools::interpolate_boundary_values(dof_handler,
                                                         0,
-                                                        dealii::ZeroFunction<2>(),
+                                                        BoundaryValues<2>(),
                                                         boundary_values);
+
+
         dealii::MatrixTools::apply_boundary_values(boundary_values,
                                                    system_matrix,
                                                    solution,
                                                    system_rhs);
 
     }
+
+
+
 
     void Simulation::solve()
     {

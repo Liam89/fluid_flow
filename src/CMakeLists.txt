@@ -14,8 +14,10 @@ enable_testing()
 include(gmock)
 
 add_subdirectory(gui)
+add_subdirectory(grid)
 add_subdirectory(simulation)
+add_subdirectory(render)
 
 SET(TARGET "fluid_flow")
 ADD_EXECUTABLE(${TARGET} main.cpp)
-target_link_libraries(${TARGET} gui simulation)
+target_link_libraries(${TARGET} gui simulation render)
