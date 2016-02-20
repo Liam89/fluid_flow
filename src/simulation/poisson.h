@@ -1,5 +1,5 @@
-#ifndef SIM_LAPLACE_H
-#define SIM_LAPLACE_H
+#ifndef SIM_POISSON_H
+#define SIM_POISSON_H
 
 #include <string>
 
@@ -37,22 +37,24 @@ namespace Simulation
     public:
         Poisson();
         const std::string run();
-        const std::string get_grid() const;
+        const std::string get_grid() const;        
+        double get_point_value(const dealii::Point<2> point) const;
 
     private:
         void setup_grid();
         void setup_system();
         void assemble_system();
         void solve();
-        std::string get_solution();
+        std::string get_vtu_solution();
 
         dealii::Triangulation<2> triangulation;
         dealii::FE_Q<2> fe;
         dealii::DoFHandler<2> dof_handler;
+        dealii::Vector<double> solution;
+
         dealii::SparsityPattern sparsity_pattern;
         dealii::SparseMatrix<double> system_matrix;
-        dealii::Vector<double> solution;
         dealii::Vector<double> system_rhs;
     };
 }
-#endif // SIM_LAPLACE_H
+#endif // SIM_POISSON_H

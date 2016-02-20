@@ -13,6 +13,14 @@ namespace Simulation
                                      //  triangulation doesn't need to be set up yet
     {}
 
+    double Poisson::get_point_value(const dealii::Point<2> point) const
+    {
+        dealii::Vector<double> value{1};
+        dealii::VectorTools::point_value(dof_handler,solution,point,value);
+        return value[0];
+    }
+
+
     // square mesh with 16 * 16 cells
     void Poisson::setup_grid()
     {
@@ -28,16 +36,18 @@ namespace Simulation
         return ss.str();
     }
 
-    std::string Poisson::get_solution()
+
+    std::string Poisson::get_vtu_solution()
     {
         std::stringstream ss;
         dealii::DataOut<2> data_out;
-        data_out.attach_dof_handler (dof_handler);
-        data_out.add_data_vector (solution, "solution");
-        data_out.build_patches ();
+        data_out.attach_dof_handler(dof_handler);
+        data_out.add_data_vector(solution, "solution");
+        data_out.build_patches();
         data_out.write_vtu(ss);
         return ss.str();
     }
+
 
     // Set up the dofs of the system and allocate memory for it
     void Poisson::setup_system()
@@ -48,26 +58,27 @@ namespace Simulation
 
         // resize the system matrix, a sparse matrix is used since most elements are zero
         dealii::CompressedSparsityPattern c_sparsity(dof_handler.n_dofs());
-        dealii::DoFTools::make_sparsity_pattern (dof_handler, c_sparsity);
+        dealii::DoFTools::make_sparsity_pattern(dof_handler, c_sparsity);
         sparsity_pattern.copy_from(c_sparsity);
         system_matrix.reinit(sparsity_pattern);
 
         // resize the right hand side and solution vectors
-        solution.reinit (dof_handler.n_dofs());
-        system_rhs.reinit (dof_handler.n_dofs());
+        solution.reinit(dof_handler.n_dofs());
+        system_rhs.reinit(dof_handler.n_dofs());
     }
 
     template <int dim>
     class BoundaryValues : public dealii::Function<dim>
     {
     public:
-      BoundaryValues () : dealii::Function<dim>() {}
-      virtual double value (const dealii::Point<dim>   &p,
+      BoundaryValues() : dealii::Function<dim>() {}
+      virtual ~BoundaryValues(){}
+      virtual double value(const dealii::Point<dim>   &p,
                             const unsigned int  component = 0) const;
     };
 
     template <int dim>
-    double BoundaryValues<dim>::value (const dealii::Point<dim> &p,
+    double BoundaryValues<dim>::value(const dealii::Point<dim> &p,
                                        const unsigned int /*component*/) const
     {
       return p(0)*p(0);
@@ -91,7 +102,7 @@ namespace Simulation
         dealii::Vector<double> cell_rhs(dofs_per_cell);
         std::vector<dealii::types::global_dof_index> local_dof_indices(dofs_per_cell);
 
-        for (auto cell : dof_handler.active_cell_iterators()) {
+        for(auto cell : dof_handler.active_cell_iterators()) {
             // compute values, gradients, and weights of shape functions on cell
             fe_values.reinit(cell);
             // reset local system
@@ -99,16 +110,16 @@ namespace Simulation
             cell_rhs = 0;
 
             // Integrate over cell by looping over quadrature points and degrees of freedom, and assemble local system
-            for (unsigned int q_index = 0; q_index < n_q_points; ++q_index) {
-                for (unsigned int i = 0; i < dofs_per_cell; ++i) {
-                    for (unsigned int j = 0; j < dofs_per_cell; ++j) {
+            for(unsigned int q_index = 0; q_index < n_q_points; ++q_index) {
+                for(unsigned int i = 0; i < dofs_per_cell; ++i) {
+                    for(unsigned int j = 0; j < dofs_per_cell; ++j) {
                         cell_matrix(i,j) += (fe_values.shape_grad(i, q_index) *
                                             fe_values.shape_grad(j, q_index) *
                                             fe_values.JxW(q_index));
                     }
                 }
 
-                for (unsigned int i = 0; i < dofs_per_cell; ++i) {
+                for(unsigned int i = 0; i < dofs_per_cell; ++i) {
                   cell_rhs(i) += (fe_values.shape_value(i, q_index) *
                                   0 *
                                   fe_values.JxW(q_index));
@@ -117,14 +128,14 @@ namespace Simulation
 
             // transfer cell contribution to global system
             cell->get_dof_indices(local_dof_indices);
-            for (unsigned int i = 0; i < dofs_per_cell; ++i) {
-                for (unsigned int j = 0; j < dofs_per_cell; ++j) {
+            for(unsigned int i = 0; i < dofs_per_cell; ++i) {
+                for(unsigned int j = 0; j < dofs_per_cell; ++j) {
                     system_matrix.add(local_dof_indices[i],
                                       local_dof_indices[j],
                                       cell_matrix(i,j));
                 }
             }
-            for (unsigned int i = 0; i < dofs_per_cell; ++i) {
+            for(unsigned int i = 0; i < dofs_per_cell; ++i) {
               system_rhs(local_dof_indices[i]) += cell_rhs(i);
             }
 
@@ -146,8 +157,6 @@ namespace Simulation
     }
 
 
-
-
     void Poisson::solve()
     {
         dealii::SolverControl solver_control(1000, 1e-12);
@@ -161,7 +170,9 @@ namespace Simulation
         setup_system();
         assemble_system();
         solve();
-        return get_solution();
+        return get_vtu_solution();
     }
+
+
 
 }
