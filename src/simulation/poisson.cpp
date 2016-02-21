@@ -1,6 +1,25 @@
 // Adapted from deall II tutorials: https://dealii.org/8.2.1/doxygen/deal.II/Tutorial.html
+
 #include "poisson.h"
+#include "mesh/grid.h"
+
+// setup of system of equations
+#include <deal.II/dofs/dof_accessor.h>
+#include <deal.II/dofs/dof_tools.h>
+#include <deal.II/fe/fe_values.h>
+#include <deal.II/base/quadrature_lib.h>
+#include <deal.II/numerics/vector_tools.h>
+#include <deal.II/numerics/matrix_tools.h>
+
+// solving system of equations
+#include <deal.II/lac/full_matrix.h>
+#include <deal.II/lac/compressed_sparsity_pattern.h>
+#include <deal.II/lac/solver_cg.h>
+#include <deal.II/lac/precondition.h>
+#include <deal.II/numerics/data_out.h>
+
 #include "deal.II/base/function_lib.h"
+
 #include <iostream>
 #include <fstream>
 #include <sstream>
@@ -8,11 +27,17 @@
 namespace Simulation
 {
     Poisson::Poisson()
-        : fe(1), // 2d bi-linear lagrange finite element (a square with degrees of freedom at the corners)
-          dof_handler(triangulation) // associate degrees of freedom handler with triangulation (the mesh),
-                                     //  triangulation doesn't need to be set up yet
+        : fe{1}, // 2d bi-linear lagrange finite element (a square with degrees of freedom at the corners)
+          grid{new Mesh::Grid<2>{}},
+          // brace style initialization broken with references in gcc <4.9
+          // we rarely use grid directly and mostly use the dof_handler, so keep a reference to it for convenience
+          dof_handler(grid->get_dof_handler())
     {}
 
+    // explicit destructor so we can use unique_ptr with an incomplete type
+    Poisson::~Poisson(){}
+
+    // Get the value of the solution at the point
     double Poisson::get_point_value(const dealii::Point<2> point) const
     {
         dealii::Vector<double> value{1};
@@ -20,23 +45,7 @@ namespace Simulation
         return value[0];
     }
 
-
-    // square mesh with 16 * 16 cells
-    void Poisson::setup_grid()
-    {
-        dealii::GridGenerator::hyper_cube(triangulation, -1, 1);
-        triangulation.refine_global(4); // 2^4 * 2^4 cells
-    }
-
-    const std::string Poisson::get_grid() const
-    {
-        std::stringstream ss;
-        dealii::GridOut grid_out;
-        grid_out.write_vtu(triangulation, ss);
-        return ss.str();
-    }
-
-
+    // Convert the solution to a string in the vtu format
     std::string Poisson::get_vtu_solution()
     {
         std::stringstream ss;
@@ -47,7 +56,6 @@ namespace Simulation
         data_out.write_vtu(ss);
         return ss.str();
     }
-
 
     // Set up the dofs of the system and allocate memory for it
     void Poisson::setup_system()
@@ -67,24 +75,7 @@ namespace Simulation
         system_rhs.reinit(dof_handler.n_dofs());
     }
 
-    template <int dim>
-    class BoundaryValues : public dealii::Function<dim>
-    {
-    public:
-      BoundaryValues() : dealii::Function<dim>() {}
-      virtual ~BoundaryValues(){}
-      virtual double value(const dealii::Point<dim>   &p,
-                            const unsigned int  component = 0) const;
-    };
-
-    template <int dim>
-    double BoundaryValues<dim>::value(const dealii::Point<dim> &p,
-                                       const unsigned int /*component*/) const
-    {
-      return p(0)*p(0);
-    }
-
-    // Calculate the values of the system matrix and rhs
+    // Calculate the values of the system matrix and rhs. System must be set up before this is called
     void Poisson::assemble_system()
     {
         // quadrature to use when integrating over finite elements
@@ -121,7 +112,7 @@ namespace Simulation
 
                 for(unsigned int i = 0; i < dofs_per_cell; ++i) {
                   cell_rhs(i) += (fe_values.shape_value(i, q_index) *
-                                  0 *
+                                  0 *  // function on rhs of the poisson equation. i.e. this is actually the lapace equation because it's 0
                                   fe_values.JxW(q_index));
                 }
             }
@@ -145,7 +136,7 @@ namespace Simulation
         std::map<dealii::types::global_dof_index,double> boundary_values;
         dealii::VectorTools::interpolate_boundary_values(dof_handler,
                                                         0,
-                                                        BoundaryValues<2>(),
+                                                        grid->get_boundary(),
                                                         boundary_values);
 
 
@@ -156,7 +147,7 @@ namespace Simulation
 
     }
 
-
+    // Solve the assembled system
     void Poisson::solve()
     {
         dealii::SolverControl solver_control(1000, 1e-12);
@@ -166,7 +157,6 @@ namespace Simulation
 
     const std::string Poisson::run()
     {
-        setup_grid();
         setup_system();
         assemble_system();
         solve();
