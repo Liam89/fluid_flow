@@ -1,4 +1,4 @@
-// Adapted from deall II tutorials: https://dealii.org/8.2.1/doxygen/deal.II/Tutorial.html
+// Adapted from deall II tutorial: http://www.dealii.org/8.2.1/doxygen/deal.II/step_3.html
 
 #include "poisson.h"
 #include "mesh/grid.h"
@@ -16,8 +16,6 @@
 #include <deal.II/lac/compressed_sparsity_pattern.h>
 #include <deal.II/lac/solver_cg.h>
 #include <deal.II/lac/precondition.h>
-#include <deal.II/numerics/data_out.h>
-
 #include "deal.II/base/function_lib.h"
 
 #include <iostream>
@@ -27,34 +25,14 @@
 namespace Simulation
 {
     Poisson::Poisson()
-        : fe{1}, // 2d bi-linear lagrange finite element (a square with degrees of freedom at the corners)
-          grid{new Mesh::Grid<2>{}},
-          // brace style initialization broken with references in gcc <4.9
-          // we rarely use grid directly and mostly use the dof_handler, so keep a reference to it for convenience
-          dof_handler(grid->get_dof_handler())
+        : SimulationBase(),
+          fe{1} // 2d bi-linear lagrange finite element (a square with degrees of freedom at the corners
     {}
 
-    // explicit destructor so we can use unique_ptr with an incomplete type
-    Poisson::~Poisson(){}
-
-    // Get the value of the solution at the point
-    double Poisson::get_point_value(const dealii::Point<2> point) const
+    Poisson::~Poisson()
     {
-        dealii::Vector<double> value{1};
-        dealii::VectorTools::point_value(dof_handler,solution,point,value);
-        return value[0];
-    }
-
-    // Convert the solution to a string in the vtu format
-    std::string Poisson::get_vtu_solution()
-    {
-        std::stringstream ss;
-        dealii::DataOut<2> data_out;
-        data_out.attach_dof_handler(dof_handler);
-        data_out.add_data_vector(solution, "solution");
-        data_out.build_patches();
-        data_out.write_vtu(ss);
-        return ss.str();
+        // release any pointers, e.g. to the finite element, so we don't need to rely on destruction order
+        dof_handler.clear();
     }
 
     // Set up the dofs of the system and allocate memory for it
@@ -132,7 +110,7 @@ namespace Simulation
 
         }
 
-        // apply boundary conditions
+        // Interpolate and apply boundary conditions
         std::map<dealii::types::global_dof_index,double> boundary_values;
         dealii::VectorTools::interpolate_boundary_values(dof_handler,
                                                         0,
@@ -154,15 +132,4 @@ namespace Simulation
         dealii::SolverCG<> solver(solver_control);
         solver.solve(system_matrix, solution, system_rhs, dealii::PreconditionIdentity());
     }
-
-    const std::string Poisson::run()
-    {
-        setup_system();
-        assemble_system();
-        solve();
-        return get_vtu_solution();
-    }
-
-
-
 }

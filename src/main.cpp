@@ -11,8 +11,8 @@ int main(int argc, char** argv)
 {
     QApplication app{argc, argv};
 
-    Simulation::Poisson poisson_problem;
-    std::string ss = poisson_problem.run();
+    std::unique_ptr<Simulation::Poisson> simulation(new Simulation::Poisson());
+    std::string ss = simulation->run();
     Renderer renderer{ss};
 
     MainWindow mainWindow;
