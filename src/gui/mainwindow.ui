@@ -20,7 +20,7 @@
    <widget class="QPushButton" name="startButton">
     <property name="geometry">
      <rect>
-      <x>79</x>
+      <x>300</x>
       <y>0</y>
       <width>41</width>
       <height>25</height>
@@ -59,9 +59,20 @@
      </rect>
     </property>
    </widget>
+   <widget class="QComboBox" name="variableSelection">
+    <property name="geometry">
+     <rect>
+      <x>10</x>
+      <y>0</y>
+      <width>79</width>
+      <height>25</height>
+     </rect>
+    </property>
+   </widget>
    <zorder>vtkWidget</zorder>
    <zorder>startButton</zorder>
    <zorder>stopButton</zorder>
+   <zorder>variableSelection</zorder>
   </widget>
   <widget class="QStatusBar" name="statusbar"/>
   <widget class="QMenuBar" name="menubar">

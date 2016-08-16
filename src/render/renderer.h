@@ -19,6 +19,7 @@ public:
     void load_solution(const std::string &vtu_contents);
     vtkSmartPointer<vtkRenderer> get_vtk_renderer();
     std::vector<std::string> get_data_labels();
+    void set_displayed_data(const std::string &label);
 private:
     vtkSmartPointer<vtkRenderer> vtk_renderer;
     vtkSmartPointer<vtkXMLUnstructuredGridReader> reader;

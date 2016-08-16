@@ -68,6 +68,15 @@ void Renderer::update_data_labels()
             vtkDataSetAttributes::SCALARS, vtkAssignAttribute::POINT_DATA);
 }
 
+void Renderer::set_displayed_data(const std::string &label)
+{
+    // todo vtkAssignAttribute
+    auto scalars = soln_surface_filter->GetOutput()->GetPointData()->GetScalars();
+    if ( !scalars || scalars->GetName() != label ) {
+        soln_active_scalar->Assign(label.c_str(),
+                vtkDataSetAttributes::SCALARS, vtkAssignAttribute::POINT_DATA);
+    }
+}
 
 void Renderer::add_actors()
 {

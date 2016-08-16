@@ -23,10 +23,13 @@ private Q_SLOTS:
     void on_startButton_clicked();
 
     void on_stopButton_clicked();
+    void on_variableSelection_currentTextChanged(const QString &label);
 
 private:
     Ui::MainWindow *ui;
     Renderer renderer;
+
+    void update_data_labels();
 };
 
 #endif // MAINWINDOW_H
