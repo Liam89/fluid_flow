@@ -1,4 +1,5 @@
 #include "renderer.h"
+#include "scalar_range_scaler.h"
 
 #include <vtkSmartPointer.h>
 #include <vtkRenderWindow.h>
@@ -86,7 +87,11 @@ void Renderer::create_solution_actor()
     warp_scalar->UseNormalOn();
     warp_scalar->SetNormal(0, 0, 1);
 
-    soln_mapper->SetInputConnection(warp_scalar->GetOutputPort());
+    auto scaler = vtkSmartPointer<ScalarRangeScaler>::New();
+    scaler->SetInputConnection(warp_scalar->GetOutputPort());
+    scaler->set_mapper(soln_mapper.Get());
+
+    soln_mapper->SetInputConnection(scaler->GetOutputPort());
     solution->SetMapper(soln_mapper);
 }
 
