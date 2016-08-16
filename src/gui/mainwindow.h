@@ -3,7 +3,7 @@
 
 #include <QMainWindow>
 #include <vtkSmartPointer.h>
-#include <vtkRenderer.h>
+#include <render/renderer.h>
 
 namespace Ui {
 class MainWindow;
@@ -17,7 +17,7 @@ public:
     explicit MainWindow(QWidget *parent = 0);
     ~MainWindow();
 
-    void set_renderer(vtkSmartPointer<vtkRenderer> renderer);
+    void set_result(const std::string &vtu_contents);
 
 private Q_SLOTS:
     void on_startButton_clicked();
@@ -26,7 +26,7 @@ private Q_SLOTS:
 
 private:
     Ui::MainWindow *ui;
-    vtkSmartPointer<vtkRenderer> renderer;
+    Renderer renderer;
 };
 
 #endif // MAINWINDOW_H
