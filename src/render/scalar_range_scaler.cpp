@@ -1,4 +1,4 @@
-#include "scaler_range_scaler.h"
+#include "scalar_range_scaler.h"
 
 #include <vtkSetGet.h>
 #include <vtkObjectFactory.h>

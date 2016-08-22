@@ -29,7 +29,7 @@ private:
     Ui::MainWindow *ui;
     Renderer renderer;
 
-    void update_data_labels();
+    void update_dataset_labels();
 };
 
 #endif // MAINWINDOW_H

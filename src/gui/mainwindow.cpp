@@ -20,16 +20,21 @@ MainWindow::~MainWindow()
 void MainWindow::set_result(const std::string &vtu_contents)
 {
     renderer.load_solution(vtu_contents);
-    update_data_labels();
+    update_dataset_labels();
 }
 
-void MainWindow::update_data_labels()
+void MainWindow::update_dataset_labels()
 {
     auto variableSelection = ui->variableSelection;
-    for (auto str : renderer.get_data_labels()) {
-        variableSelection->addItem( QString{str.c_str()} );
+    variableSelection->clear();
+    auto labels = renderer.get_dataset_labels();
+    for (auto label : labels) {
+        variableSelection->addItem( QString{label.c_str()} );
     }
-    variableSelection->setCurrentIndex(0);
+    if ( !labels.empty() ) {
+        renderer.set_displayed_dataset( labels[0] );
+        variableSelection->setCurrentIndex(0);
+    }
 }
 
 void MainWindow::on_startButton_clicked()
@@ -44,6 +49,6 @@ void MainWindow::on_stopButton_clicked()
 
 void MainWindow::on_variableSelection_currentTextChanged(const QString &label)
 {
-    renderer.set_displayed_data( label.toStdString() );
+    renderer.set_displayed_dataset( label.toStdString() );
     ui->vtkWidget->GetRenderWindow()->Render();
 }
