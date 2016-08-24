@@ -26,10 +26,10 @@ void SolutionPipeline::update()
 void SolutionPipeline::update_dataset_labels() //todo update on get_data_labels
 {
     // todo only update if modified
-    soln_surface_filter->Update(); // Need to force update of pipeline before converting to
+    soln_active_scalar->Update(); // Need to force update of pipeline before converting to
                                    //  data object
     data_labels.clear();
-    auto point_data = soln_surface_filter->GetOutput()->GetPointData();
+    auto point_data = soln_active_scalar->GetPolyDataOutput()->GetPointData();
     auto num_arrays = point_data->GetNumberOfArrays();
     for (int i = 0; i < num_arrays; ++i) {
         auto data_label = point_data->GetArrayName(i);
@@ -73,10 +73,10 @@ std::vector<std::string> SolutionPipeline::get_dataset_labels()
 
 void SolutionPipeline::set_displayed_dataset(const std::string &label)
 {
-    // todo get scalars via vtkAssignAttribute?
-    soln_surface_filter->Update();
-    auto scalars = soln_surface_filter->GetOutput()->GetPointData()->GetScalars();
-    if ( scalars && scalars->GetName() != label ) {
+    soln_active_scalar->Update();
+    auto active_scalars = soln_active_scalar->GetPolyDataOutput()->GetPointData()->GetScalars(); // todo nicer way?
+    if ( active_scalars == nullptr || active_scalars->GetName() != label ) {
+        // SetActiveScalars doesn't update the solution actor, so vtkAssignAttribute is used
         soln_active_scalar->Assign(label.c_str(),
                 vtkDataSetAttributes::SCALARS, vtkAssignAttribute::POINT_DATA);
     }
