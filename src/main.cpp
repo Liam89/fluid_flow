@@ -1,17 +1,19 @@
 #include <QApplication>
 
 #include "simulation/poisson.h"
+#include "simulation/ns_incompressible.h"
 #include "gui/mainwindow.h"
 
 #include <string>
 #include <iostream>
-#include <fstream>
 
 int main(int argc, char** argv)
 {
     QApplication app{argc, argv};
 
-    std::unique_ptr<Simulation::Poisson> simulation(new Simulation::Poisson());
+    // todo
+    //std::unique_ptr<Simulation::Poisson> simulation(new Simulation::Poisson());
+    std::unique_ptr<Simulation::SimulationBase<2>> simulation(new Simulation::NSIncompressible<2>());
     std::string ss = simulation->run();
 
     MainWindow mainWindow;

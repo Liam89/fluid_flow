@@ -34,9 +34,9 @@ namespace Simulation
         dealii::Vector<double> solution;
 
     private:
-        virtual void setup_system() = 0;
-        virtual void assemble_system() = 0;
-        virtual void solve() = 0;
+        virtual void setup_system(){}
+        virtual void assemble_system(){}
+        virtual void solve(){}
         std::string get_vtu_solution();
     };
 }
